@@ -1,5 +1,8 @@
 import csv
 from datetime import datetime
+import sys
+
+csv_filename = sys.argv[1]
 
 INPUT_DT_FORMAT = "%Y-%m-%d %H:%M"
 OUTPUT_DT_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
@@ -12,7 +15,7 @@ def format_record(from_time, to_time, created_at):
 
 
 transformed_csv = []
-with open("feed_hist.csv") as csvfile:
+with open(csv_filename) as csvfile:
     reader = csv.reader(csvfile)
     reader.__next__()
     for i, row in enumerate(reader):
@@ -38,9 +41,8 @@ with open("feed_hist.csv") as csvfile:
             (i + 1, from_time, to_time, duration, created_at, updated_at)
         )
 
-with open("feed_hist_trans.csv", "w") as csv_file:
+base_filename, _ = csv_filename.split(".csv")
+
+with open(base_filename + "_trans.csv", "w") as csv_file:
     writer = csv.writer(csv_file)
-    writer.writerow(
-        ("id", "from_time", "to_time", "duration", "created_at", "updated_at")
-    )
     writer.writerows(transformed_csv)
