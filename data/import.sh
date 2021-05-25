@@ -15,15 +15,15 @@ duration int,
 created_at text,
 updated_at text);'
 
-python transform_csv.py feed_hist.csv
-python transform_csv.py sleep_hist.csv
+.venv/bin/python3 ./data/transform_csv.py ./data/feed_hist.csv
+.venv/bin/python3 ./data/transform_csv.py ./data/sleep_hist.csv
 
-sqlite3 ../db.sqlite <<EOF
+sqlite3 db.sqlite <<EOF
 ${SQL_CREATE_FEED_TABLE}
 ${SQL_CREATE_SLEEP_TABLE}
 .mode csv
-.import feed_hist_trans.csv feed
-.import sleep_hist_trans.csv sleep
+.import ./data/feed_hist_trans.csv feed
+.import ./data/sleep_hist_trans.csv sleep
 UPDATE feed SET from_time = NULL WHERE from_time = 'NULL';
 UPDATE feed SET to_time = NULL WHERE to_time = 'NULL';
 UPDATE feed SET duration = NULL WHERE duration = 'NULL';

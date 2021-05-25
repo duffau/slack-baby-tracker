@@ -22,7 +22,7 @@ deploy()
         ssh $USER@$REMOTE_HOST "cd $DEPLOY_DIR && ./create-venv.sh"
         # Import database from CSV's
         rsync -rav -e ssh  --exclude='__pycache__' ./data $USER@$REMOTE_HOST:${DEPLOY_DIR}/
-        ssh $USER@$REMOTE_HOST "cd $DEPLOY_DIR/data && ./import.sh"
+        ssh $USER@$REMOTE_HOST "cd $DEPLOY_DIR && ./data/import.sh"
     fi
     ssh $USER@$REMOTE_HOST "supervisorctl reread; supervisorctl update; supervisorctl restart baby_tracker"
 }
