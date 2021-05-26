@@ -1,8 +1,11 @@
-from prettytable import PrettyTable
+from prettytable import PrettyTable, NONE
 
 
 def table(rows, colnames):
     t = PrettyTable()
+    t.border = False
+    t.hrules = NONE
+    t.vrules = NONE
     t.field_names = colnames
     for row in rows:
         t.add_row(row)

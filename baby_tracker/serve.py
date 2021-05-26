@@ -9,11 +9,29 @@ from baby_tracker import slack
 
 
 HELP = """
-This is the Carla sleep and nursing tracker.
+This is the baby tracker.
 
 *Examples*:
-/carla n 12:30 [12:45]: register nursing between two timestamps where the end point is optional.
+/f Register *breastfeeding*. Call command without arguments for help.
+/sl Register *sleep*. Call command without arguments for help.
 """
+
+SLEEP_HELP = """
+*Examples*:
+`/sl`  _This help text_
+`/sl 12:30 16:45` _Register sleep between two time points_
+`/sl ls 5` _List 5 latest sleep entries_
+`/sl d 71` _Delete sleep record with id=71_
+"""
+
+FEED_HELP = """
+*Examples*:
+`/f`  _This help text_
+`/f 12:30 16:45` _Register breastfeeding between two time points_
+`/f ls 5` _List 5 latest breastfeeding entries_
+`/f d 71` _Delete breastfeeding record with id=71_
+"""
+
 DEFAULT_N_LIST = 5
 
 
@@ -78,7 +96,9 @@ def help():
 
 
 def handle_feed_request(args, db_conn):
-    if args[0] in {"d", "del", "delete"}:
+    if args is None:
+        resp = slack.response(FEED_HELP, response_type="ephemeral")
+    elif args[0] in {"d", "del", "delete"}:
         resp = handle_delete_feed(args, db_conn)
     elif args[0] in {"ls", "list"}:
         resp = handle_list_feeds(args, db_conn)
@@ -119,7 +139,9 @@ def create_feed_record(args, db_conn):
     return create_duration_record(args, db.create_feed, db_conn)
 
 def handle_sleep_request(args, db_conn):
-    if args[0] in {"d", "del", "delete"}:
+    if args is None:
+        resp = slack.response(SLEEP_HELP,response_type="ephemeral")
+    elif args[0] in {"d", "del", "delete"}:
         resp = handle_delete_sleep(args, db_conn)
     elif args[0] in {"ls", "list"}:
         resp = handle_list_sleeps(args, db_conn)
@@ -188,17 +210,20 @@ def parse_duration_args(args):
 
 def format_duration_row(row: tuple):
     id, from_time, to_time, duration, created_at, updated_at = row
-    from_time = format_timestamp(from_time)
-    to_time = format_timestamp(to_time)
+    from_time = format_timestamp(from_time, short=True)
+    to_time = format_timestamp(to_time, short=True)
     duration = format_duration(duration)
     created_at = format_timestamp(created_at)
     updated_at = format_timestamp(updated_at)
     return id, from_time, to_time, duration, created_at
 
 
-def format_timestamp(timestamp: datetime):
+def format_timestamp(timestamp: datetime, short=False):
     try:
-        return timestamp.strftime("%d/%m-%Y %H:%M")
+        if short:
+            return timestamp.strftime("%H:%M")
+        else:
+            return timestamp.strftime("%d/%m-%Y %H:%M")
     except AttributeError:
         return str(timestamp)
 
