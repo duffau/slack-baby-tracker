@@ -32,9 +32,10 @@ deploy()
 setup_backups()
 {
     ssh $USER@$REMOTE_HOST "mkdir -p ${DEPLOY_DIR}/backup"
-    cron_schedule='0 4 * * *'
-    backup_cmd="cp ${DEPLOY_DIR}/db.sqlite ${DEPLOY_DIR}/backup/db-$(date +%Y-%m-%d).sqlite; find ${DEPLOY_DIR}/backup/ -type f -mtime +10 -delete"
-    crontab_line="$cron_schedule \"$backup_cmd\""
+    cron_schedule='0 4 \* \* \*'
+    backup_cmd="cp ${DEPLOY_DIR}/db.sqlite ${DEPLOY_DIR}/backup/db-\$(date +%Y-%m-%d).sqlite; find ${DEPLOY_DIR}/backup/ -type f -mtime +10 -delete"
+    crontab_line="$cron_schedule $backup_cmd"
+    echo "crontab_line: $crontab_line"
     ssh $USER@$REMOTE_HOST "echo $crontab_line | crontab -"
 }
 
