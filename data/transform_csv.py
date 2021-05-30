@@ -36,7 +36,6 @@ with open(input_csv_filename) as csvfile:
             duration = "NULL"
         created_at = datetime.strptime(row[2], INPUT_DT_FORMAT)
         updated_at = "NULL"
-        print("duration:", duration, row)
         from_time, to_time, created_at = format_record(from_time, to_time, created_at)
         transformed_csv.append(
             (i + 1, from_time, to_time, duration, created_at, updated_at)
