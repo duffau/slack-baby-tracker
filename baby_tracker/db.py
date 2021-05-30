@@ -103,16 +103,59 @@ def _get_latest_duration_records(conn, table, n):
     rows = cur.fetchall()
     transformed_rows = []
     for row in rows:
-        id, from_time, to_time, duration, created_at, updated_at = row
-        from_time = to_datetime(from_time)
-        to_time = to_datetime(to_time)
-        duration = seconds_to_timedelta(duration)
-        created_at = to_datetime(created_at)
-        updated_at = to_datetime(updated_at)
-        transformed_row = id, from_time, to_time, duration, created_at, updated_at
+        transformed_row = transform_duration_row(row)
         transformed_rows.append(transformed_row)
     return transformed_rows
 
+
+def get_feed_record_by_id(conn, id):
+    return _get_duration_record_by_id(conn, "feed", id)
+
+
+def get_sleep_record_by_id(conn, id):
+    return _get_duration_record_by_id(conn, "sleep", id)
+
+
+def _get_duration_record_by_id(conn, table, id):
+    cur = conn.cursor()
+    sql = f"SELECT * FROM {table} WHERE id = {id}"
+    cur.execute(sql)
+    rows = cur.fetchall()
+    if rows:
+        transformed_row = transform_duration_row(rows[0])
+        return transformed_row
+    else:
+        return None
+
+def get_latest_feed_record_with_null_to_time(conn):
+    return _get_latest_duration_record_with_null_to_time(conn, "feed")
+
+
+def get_latest_sleep_record_with_null_to_time(conn):
+    return _get_latest_duration_record_with_null_to_time(conn, "sleep")
+
+
+def _get_latest_duration_record_with_null_to_time(conn, table):
+    cur = conn.cursor()
+    sql = f"SELECT * FROM {table} WHERE to_time IS NULL ORDER BY created_at desc LIMIT 1;"
+    cur.execute(sql)
+    rows = cur.fetchall()
+    if rows:
+        transformed_row = transform_duration_row(rows[0])
+        return transformed_row
+    else:
+        return None
+
+
+def transform_duration_row(row):
+    id, from_time, to_time, duration, created_at, updated_at = row
+    from_time = to_datetime(from_time)
+    to_time = to_datetime(to_time)
+    duration = seconds_to_timedelta(duration)
+    created_at = to_datetime(created_at)
+    updated_at = to_datetime(updated_at)
+    transformed_row = id, from_time, to_time, duration, created_at, updated_at
+    return transformed_row
 
 def delete_feed(conn, feed_id):
     return _delete_duration_record(conn, feed_id, "feed")
@@ -135,6 +178,36 @@ def _delete_duration_record(conn, record_id, table):
     cur.execute(sql)
     conn.commit()
     return record_id
+
+
+def update_feed(conn, feed_id, feed_record):
+    return _update_duration_record(conn, "feed", feed_id, feed_record)
+
+
+def update_sleep(conn, sleep_id, sleep_record):
+    return _update_duration_record(conn, "sleep", sleep_id, sleep_record)
+
+
+def _update_duration_record(conn, table, id, duration_record):
+    sql = f"""UPDATE {table} 
+                SET from_time = ?,
+                    to_time = ?, 
+                    duration = ?,
+                    updated_at = ?
+                WHERE id = ?"""
+    cur = conn.cursor()
+    current_timestamp = to_iso(datetime.now())
+    from_time, to_time, duration = duration_record
+    if from_time is not None:
+        from_time = to_iso(from_time)
+    if to_time is not None:
+        to_time = to_iso(to_time)
+    if duration is not None:
+        duration = duration.seconds
+    row = (from_time, to_time, duration, current_timestamp, id)
+    cur.execute(sql, row)
+    conn.commit()
+    return id
 
 
 def to_iso(timestamp: datetime):

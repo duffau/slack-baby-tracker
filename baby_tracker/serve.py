@@ -22,6 +22,8 @@ SLEEP_HELP = """
 `/sl 12:30 16:45` _Register sleep between two time points_
 `/sl ls 5` _List 5 latest sleep entries_
 `/sl d 71` _Delete sleep record with id=71_
+`/sl s 14:45` Sleep started at 14:45.
+
 """
 
 FEED_HELP = """
@@ -98,6 +100,10 @@ def help():
 def handle_feed_request(args, db_conn):
     if args is None:
         resp = slack.response(FEED_HELP, response_type="ephemeral")
+    elif args[0] in {"s", "start"}:
+        resp = handle_feed_start(args, db_conn)
+    elif args[0] in {"e", "end"}:
+        resp = handle_feed_end(args, db_conn)
     elif args[0] in {"d", "del", "delete"}:
         resp = handle_delete_feed(args, db_conn)
     elif args[0] in {"ls", "list"}:
@@ -134,13 +140,33 @@ def handle_feed_create(args, db_conn):
     resp = slack.response(mrk_down_message)
     return resp
 
+def handle_feed_start(args, db_conn):
+    feed_id, _ = create_feed_record(args[1:], db_conn)
+    id, from_time, *ignore = db.get_feed_record_by_id(db_conn, feed_id)
+    mrk_down_message = f"Breastfeeding created with Id: *{feed_id}*. Started at {format_timestamp(from_time, short=True)} :breast-feeding:"
+    resp = slack.response(mrk_down_message)
+    return resp
+
+def handle_feed_end(args, db_conn):
+    feed_id, from_time, to_time, *ignore = db.get_latest_feed_record_with_null_to_time(db_conn)
+    to_time = dp.parse(args[1])
+    duration = to_time - from_time
+    updated_feed_record = (from_time, to_time, duration)
+    db.update_feed(db_conn, feed_id, updated_feed_record)
+    mrk_down_message = f"Breastfeeding with Id: *{feed_id}* updated. Stopped at {format_timestamp(to_time, short=True)}. Duration *{format_duration(duration)}* :breast-feeding:"
+    resp = slack.response(mrk_down_message)
+    return resp
 
 def create_feed_record(args, db_conn):
     return create_duration_record(args, db.create_feed, db_conn)
 
 def handle_sleep_request(args, db_conn):
     if args is None:
-        resp = slack.response(SLEEP_HELP,response_type="ephemeral")
+        resp = slack.response(FEED_HELP, response_type="ephemeral")
+    elif args[0] in {"s", "start"}:
+        resp = handle_sleep_start(args, db_conn)
+    elif args[0] in {"e", "end"}:
+        resp = handle_sleep_end(args, db_conn)
     elif args[0] in {"d", "del", "delete"}:
         resp = handle_delete_sleep(args, db_conn)
     elif args[0] in {"ls", "list"}:
@@ -151,9 +177,29 @@ def handle_sleep_request(args, db_conn):
         raise ValueError("Not valid args: {args}")
     return resp
 
+
 def handle_sleep_create(args, db_conn):
     sleep_id, duration = create_sleep_record(args, db_conn)
     mrk_down_message = f"Sleep record created with Id: *{sleep_id}* and duration *{format_duration(duration)}* :sleeping:"
+    resp = slack.response(mrk_down_message)
+    return resp
+
+
+def handle_sleep_start(args, db_conn):
+    sleep_id, _ = create_sleep_record(args[1:], db_conn)
+    id, from_time, *ignore = db.get_sleep_record_by_id(db_conn, sleep_id)
+    mrk_down_message = f"Sleep record created with Id: *{sleep_id}*. Started at {format_timestamp(from_time, short=True)} :sleeping:"
+    resp = slack.response(mrk_down_message)
+    return resp
+
+
+def handle_sleep_end(args, db_conn):
+    sleep_id, from_time, to_time, *ignore = db.get_latest_sleep_record_with_null_to_time(db_conn)
+    to_time = dp.parse(args[1])
+    duration = to_time - from_time
+    updated_sleep_record = (from_time, to_time, duration)
+    db.update_sleep(db_conn, sleep_id, updated_sleep_record)
+    mrk_down_message = f"Sleep record with Id: *{sleep_id}* updated. Stopped at {format_timestamp(to_time, short=True)}. Duration *{format_duration(duration)}* :sleeping:"
     resp = slack.response(mrk_down_message)
     return resp
 
