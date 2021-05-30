@@ -23,13 +23,17 @@ updated_at text);'
 .venv/bin/python3 ./data/filter_rows.py ./data/sleep.csv > ./data/_sleep.csv
 .venv/bin/python3 ./data/combine_table_csvs.py ./data/_feed.csv ./data/_feed_slack_records.csv ./data/_feed.csv
 .venv/bin/python3 ./data/combine_table_csvs.py ./data/_sleep.csv ./data/_sleep_slack_records.csv ./data/_sleep.csv
+# Removed header from CSV's
+tail -n +2 ./data/_feed.csv > ./data/_feed.csv
+tail -n +2 ./data/_sleep.csv > ./data/_sleep.csv
+
 
 sqlite3 db.sqlite <<EOF
 ${SQL_CREATE_FEED_TABLE}
 ${SQL_CREATE_SLEEP_TABLE}
 .mode csv
-.import --skip 1 ./data/_feed.csv feed
-.import --skip 1 ./data/_sleep.csv sleep
+.import ./data/_feed.csv feed
+.import ./data/_sleep.csv sleep
 UPDATE feed SET from_time = NULL WHERE from_time = 'NULL';
 UPDATE feed SET to_time = NULL WHERE to_time = 'NULL';
 UPDATE feed SET duration = NULL WHERE duration = 'NULL';

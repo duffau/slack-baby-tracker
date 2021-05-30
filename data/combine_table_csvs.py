@@ -21,11 +21,18 @@ with open(second_csv_filename) as csv_file:
 
 
 all_rows = first_rows + second_rows
+
 # Sort on created_at column
 all_rows = sorted(all_rows, key=lambda row: row[-2])
 all_rows = [(i+1,*row) for i,row in enumerate(all_rows)]
 
+# Replace empty column with "NULL"
+_all_rows = []
+for row in all_rows:
+    row = ["NULL" if col_val == "" else col_val for col_val in row ]
+    _all_rows.append(row)
+
 with open(output_csv_filename, "w") as csv_file:
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(first_header)
-    csv_writer.writerows(all_rows)
+    csv_writer.writerows(_all_rows)
