@@ -15,15 +15,19 @@ duration int,
 created_at text,
 updated_at text);'
 
-.venv/bin/python3 ./data/transform_csv.py ./data/feed_hist.csv
-.venv/bin/python3 ./data/transform_csv.py ./data/sleep_hist.csv
+.venv/bin/python3 ./data/transform_csv.py ./data/feed_slack_records.csv ./data/_feed_slack_records.csv
+.venv/bin/python3 ./data/transform_csv.py ./data/sleep_slack_records.csv ./data/_sleep_slack_records.csv
+.venv/bin/python3 ./data/filter_rows.py feed.csv 75 > _feed.csv
+.venv/bin/python3 ./data/filter_rows.py sleep.csv > _sleep.csv
+.venv/bin/python3 ./data/combine_table_csvs.py ./data/_feed.csv ./data/_feed_slack_records.csv ./data/_feed.csv
+.venv/bin/python3 ./data/combine_table_csvs.py ./data/_sleep.csv ./data/_sleep_slack_records.csv ./data/_sleep.csv
 
 sqlite3 db.sqlite <<EOF
 ${SQL_CREATE_FEED_TABLE}
 ${SQL_CREATE_SLEEP_TABLE}
 .mode csv
-.import ./data/feed_hist_trans.csv feed
-.import ./data/sleep_hist_trans.csv sleep
+.import --skip 1 ./data/_feed.csv feed
+.import --skip 1 ./data/_sleep.csv sleep
 UPDATE feed SET from_time = NULL WHERE from_time = 'NULL';
 UPDATE feed SET to_time = NULL WHERE to_time = 'NULL';
 UPDATE feed SET duration = NULL WHERE duration = 'NULL';
