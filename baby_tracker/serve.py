@@ -6,7 +6,7 @@ import dateparser as dp
 
 from baby_tracker import db
 from baby_tracker import slack
-
+from baby_tracker import analyze as an
 
 HELP = """
 This is the baby tracker.
@@ -23,7 +23,7 @@ SLEEP_HELP = """
 `/sl ls 5` _List 5 latest sleep entries_
 `/sl d 71` _Delete sleep record with id=71_
 `/sl s 14:45` Sleep started at 14:45.
-
+`/sl analyze` Returns plots and stats of sleeping bahaviour.
 """
 
 FEED_HELP = """
@@ -32,10 +32,13 @@ FEED_HELP = """
 `/f 12:30 16:45` _Register breastfeeding between two time points_
 `/f ls 5` _List 5 latest breastfeeding entries_
 `/f d 71` _Delete breastfeeding record with id=71_
+`/f analyze` Returns plots and stats of breastfeeding bahaviour.
 """
 
 DEFAULT_N_LIST = 5
 
+SLACK_OAUTH_TOKEN = os.getenv("SLACK_OAUTH_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 def parse_args(args_text):
     if args_text:
@@ -108,6 +111,8 @@ def handle_feed_request(args, db_conn):
         resp = handle_delete_feed(args, db_conn)
     elif args[0] in {"ls", "list"}:
         resp = handle_list_feeds(args, db_conn)
+    elif args[0] == "analyze":
+        resp = handle_feed_analyse(args, db_conn)
     elif is_timestamp(args[0]):
         resp = handle_feed_create(args, db_conn)
     else:
@@ -157,6 +162,13 @@ def handle_feed_end(args, db_conn):
     resp = slack.response(mrk_down_message)
     return resp
 
+def handle_feed_analyse(args, db_conn):
+    df_agg_tot = an.total_duration_per_day(db_conn, "feed")
+    df_agg_tot.plot(title="Total breastfeeding time each day from 06:00 to 06:00")
+    plot_buffer = an.plot_to_buffer()
+    slack.post_file("total_breatfeeding_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    return None
+
 def create_feed_record(args, db_conn):
     return create_duration_record(args, db.create_feed, db_conn)
 
@@ -171,6 +183,8 @@ def handle_sleep_request(args, db_conn):
         resp = handle_delete_sleep(args, db_conn)
     elif args[0] in {"ls", "list"}:
         resp = handle_list_sleeps(args, db_conn)
+    elif args[0] == "analyze":
+        resp = handle_sleep_analyse(args, db_conn)
     elif is_timestamp(args[0]):
         resp = handle_sleep_create(args, db_conn)
     else:
@@ -225,6 +239,13 @@ def handle_list_sleeps(args, db_conn):
     table_str = slack.table(rows, colnames)
     msg_text = f"*{n} latest sleeping records:*\n{table_str}"
     return slack.response(msg_text, response_type="ephemeral")
+
+def handle_sleep_analyse(args, db_conn):
+    df_agg_tot = an.total_duration_per_day(db_conn, "sleep")
+    df_agg_tot.plot(title="Total sleeping time each day from 06:00 to 06:00")
+    plot_buffer = an.plot_to_buffer()
+    slack.post_file("total_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    return None
 
 
 def create_duration_record(args, create_db_record, db_conn):

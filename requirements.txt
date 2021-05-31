@@ -2,3 +2,5 @@ flask
 dateparser
 pandas
 PTable
+requests
+matplotlib

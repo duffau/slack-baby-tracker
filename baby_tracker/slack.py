@@ -1,5 +1,6 @@
+import io
+import requests
 from prettytable import PrettyTable, NONE
-
 
 def table(rows, colnames):
     t = PrettyTable()
@@ -20,3 +21,24 @@ def error_message(e: Exception):
 
 def response(mrk_down_message, response_type="in_channel"):
     return {"response_type": response_type, "text": mrk_down_message}
+
+
+def post_file(fname: str, buffer: io.BytesIO, oauth_token: str, channel_id: str, comment=""):
+    multipart_form = {
+        "file": (fname, buffer), 
+        "initial_comment": comment,
+    }
+    headers = {
+        "Authorization": f"Bearer {oauth_token}"
+    }
+
+    params = {
+        "channels": channel_id,
+    }
+
+    resp = requests.post("https://slack.com/api/files.upload", 
+        files=multipart_form, 
+        headers=headers, 
+        params=params
+    )
+    return resp
