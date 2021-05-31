@@ -173,7 +173,7 @@ def handle_feed_analyse(args, db_conn):
     slack.post_file("total_breatfeeding_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
     last_date = df_agg_tot.index[-1]
     last_duration = df_agg_tot.duration[-1]
-    msg_text = f"Total breastfeeding on {last_date.strftime('%A %m-%d')}: {last_duration/3600} hours."
+    msg_text = f"Total breastfeeding on {last_date.strftime('%A %m-%d')}: {last_duration:.1f} hours."
     return slack.response(msg_text, response_type="ephemeral")
 
 def create_feed_record(args, db_conn):
@@ -258,7 +258,7 @@ def handle_sleep_analyse(args, db_conn):
     slack.post_file("total_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
     last_date = df_agg_tot.index[-1]
     last_duration = df_agg_tot.duration[-1]
-    msg_text = f"Total sleep on {last_date.strftime('%A %m-%d')}: {last_duration/3600} hours."
+    msg_text = f"Total sleep on {last_date.strftime('%A %m-%d')}: {last_duration:.1f} hours."
     return slack.response(msg_text, response_type="ephemeral")
 
 
