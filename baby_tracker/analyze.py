@@ -10,6 +10,12 @@ def total_duration_per_day(db_conn, table, offset="6Hours"):
     agg = df.resample('D', on='from_time', offset=offset)[["duration"]].sum()
     return agg
 
+def latest_daily_total_duration(db_conn, table):
+    df_agg_tot = total_duration_per_day(db_conn, table)
+    last_date = df_agg_tot.index[-1]
+    last_duration = df_agg_tot.duration[-1]
+    return last_date, last_duration
+
 def avg_duration_per_day(db_conn, table, offset="6Hours"):
     df = df_from_db_table(db_conn, table)
     agg = df.resample('D', on='from_time', offset=offset)[["duration"]].mean()

@@ -98,7 +98,7 @@ def get_latest_sleep_records(conn, n=5):
 
 def _get_latest_duration_records(conn, table, n):
     cur = conn.cursor()
-    sql = f"SELECT * FROM {table} ORDER BY id desc LIMIT {n}"
+    sql = f"SELECT * FROM {table} ORDER BY created_at desc LIMIT {n}"
     cur.execute(sql)
     rows = cur.fetchall()
     transformed_rows = []

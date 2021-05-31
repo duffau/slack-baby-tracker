@@ -49,7 +49,7 @@ def test_start_end_feed():
     assert "00:05" in resp.json()["text"]
 
 
-def test_create_list_delete_sleep_record():
+def test_create_list_delete_analyze_sleep_record():
     params = {"text": "12:30 12:35"}
     resp = requests.post(BASE_URL + "/sleep", data=params)
     assert resp.status_code == 200
@@ -63,6 +63,12 @@ def test_create_list_delete_sleep_record():
     assert "error" not in resp.json()["text"]
     assert "12:30" in resp.json()["text"]
     assert "00:05" in resp.json()["text"]
+
+    params = {"text": "analyze"}
+    resp = requests.post(BASE_URL + "/sleep", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
 
     params = {"text": "d 1"}
     resp = requests.post(BASE_URL + "/sleep", data=params)
