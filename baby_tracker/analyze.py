@@ -1,7 +1,7 @@
 import io
 import pandas as pd
 from matplotlib import pyplot as plt
-import matplotlib.dates as mdates
+from datetime import timedelta
 
 TIMESTAMP_COLUMNS = ["from_time", "to_time", "created_at", "updated_at"]
 
@@ -13,7 +13,7 @@ def total_duration_per_day(db_conn, table, offset="6Hours"):
 def latest_daily_total_duration(db_conn, table):
     df_agg_tot = total_duration_per_day(db_conn, table)
     last_date = df_agg_tot.index[-1]
-    last_duration = df_agg_tot.duration[-1]
+    last_duration = timedelta(seconds=df_agg_tot.duration[-1])
     return last_date, last_duration
 
 def avg_duration_per_day(db_conn, table, offset="6Hours"):
