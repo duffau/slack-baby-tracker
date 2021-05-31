@@ -113,6 +113,8 @@ def handle_feed_request(args, db_conn):
         resp = handle_list_feeds(args, db_conn)
     elif args[0] == "analyze":
         resp = handle_feed_analyse(args, db_conn)
+    elif args[0] == "status":
+        resp = handle_feed_status(args, db_conn)
     elif is_timestamp(args[0]):
         resp = handle_feed_create(args, db_conn)
     else:
@@ -177,6 +179,12 @@ def handle_feed_analyse(args, db_conn):
     mrk_down_message = make_duration_status_text(db_conn, "feed")
     return slack.response(mrk_down_message, response_type="in_channel")
 
+
+def handle_feed_status(args, db_conn):
+    mrk_down_message = make_duration_status_text(db_conn, "feed")
+    return slack.response(mrk_down_message, response_type="in_channel")
+
+
 def create_feed_record(args, db_conn):
     return create_duration_record(args, db.create_feed, db_conn)
 
@@ -193,6 +201,8 @@ def handle_sleep_request(args, db_conn):
         resp = handle_list_sleeps(args, db_conn)
     elif args[0] == "analyze":
         resp = handle_sleep_analyse(args, db_conn)
+    elif args[0] == "status":
+        resp = handle_sleep_status(args, db_conn)
     elif is_timestamp(args[0]):
         resp = handle_sleep_create(args, db_conn)
     else:
@@ -259,6 +269,11 @@ def handle_sleep_analyse(args, db_conn):
         ylabel="Duration (hours)"
     )
     slack.post_file("total_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    mrk_down_message = make_duration_status_text(db_conn, "sleep")
+    return slack.response(mrk_down_message, response_type="in_channel")
+
+
+def handle_sleep_status(args, db_conn):
     mrk_down_message = make_duration_status_text(db_conn, "sleep")
     return slack.response(mrk_down_message, response_type="in_channel")
 
