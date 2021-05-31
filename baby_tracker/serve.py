@@ -164,10 +164,17 @@ def handle_feed_end(args, db_conn):
 
 def handle_feed_analyse(args, db_conn):
     df_agg_tot = an.total_duration_per_day(db_conn, "feed")
-    df_agg_tot.plot(title="Total breastfeeding time each day from 06:00 to 06:00")
-    plot_buffer = an.plot_to_buffer()
+    plot_buffer = an.duration_plot(
+        df_agg_tot, 
+        title="Total breastfeeding time each day from 06:00 to 06:00",
+        scale=1/3600,
+        ylabel="Duration (hours)"
+    )
     slack.post_file("total_breatfeeding_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
-    return None
+    last_date = df_agg_tot.index[-1]
+    last_duration = df_agg_tot.duration[-1]
+    msg_text = f"Total breastfeeding on {last_date.strftime('%A %m-%d')}: {last_duration/3600} hours."
+    return slack.response(msg_text, response_type="ephemeral")
 
 def create_feed_record(args, db_conn):
     return create_duration_record(args, db.create_feed, db_conn)
@@ -242,10 +249,17 @@ def handle_list_sleeps(args, db_conn):
 
 def handle_sleep_analyse(args, db_conn):
     df_agg_tot = an.total_duration_per_day(db_conn, "sleep")
-    df_agg_tot.plot(title="Total sleeping time each day from 06:00 to 06:00")
-    plot_buffer = an.plot_to_buffer()
+    plot_buffer = an.duration_plot(
+        df_agg_tot, 
+        title="Total sleeping time each day from 06:00 to 06:00",
+        scale=1/3600,
+        ylabel="Duration (hours)"
+    )
     slack.post_file("total_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
-    return None
+    last_date = df_agg_tot.index[-1]
+    last_duration = df_agg_tot.duration[-1]
+    msg_text = f"Total sleep on {last_date.strftime('%A %m-%d')}: {last_duration/3600} hours."
+    return slack.response(msg_text, response_type="ephemeral")
 
 
 def create_duration_record(args, create_db_record, db_conn):

@@ -18,34 +18,14 @@ def generate_duration_records(durations_minutes, spacing=timedelta(minutes=60), 
         records.append(record)
     return records 
 
-# db_conn = db.init_db(db_file=":memory:")
-db_conn = sqlite3.connect("../../../baby-tracker/db.sqlite")
+db_conn = db.init_db(db_file=":memory:")
 
 feeds = generate_duration_records(durations_minutes= [15,10,5, 15,25,65,None,80], spacing=timedelta(hours=20))
-# for feed in feeds:
-#     db.create_feed(db_conn, feed)
+for feed in feeds:
+    db.create_feed(db_conn, feed)
 
-# for record in db.list_feed_records(db_conn):
-#     print(record)
+df = an.total_duration_per_day(db_conn, "feed")
+plot_buffer = an.duration_plot(df)
 
 df = an.avg_duration_per_day(db_conn, "feed")
-print(df)
-df.plot()
-plt.savefig("feed_avg.png")
-plt.close()
-df = an.total_duration_per_day(db_conn, "feed")
-print(df)
-df.plot()
-plt.savefig("feed_total.png")
-plt.close()
-
-df = an.avg_duration_per_day(db_conn, "sleep")
-print(df)
-df.plot()
-plt.savefig("sleep_avg.png")
-plt.close()
-df = an.total_duration_per_day(db_conn, "sleep")
-print(df)
-df.plot()
-plt.savefig("sleep_total.png")
-plt.close()
+plot_buffer = an.duration_plot(df)
