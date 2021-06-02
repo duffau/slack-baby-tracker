@@ -22,6 +22,8 @@ def error_message(e: Exception):
 def response(mrk_down_message, response_type="in_channel"):
     return {"response_type": response_type, "text": mrk_down_message}
 
+def empty_response():
+    return None
 
 def post_file(fname: str, buffer: io.BytesIO, oauth_token: str, channel_id: str, comment=""):
     multipart_form = {

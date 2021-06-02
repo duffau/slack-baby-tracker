@@ -7,6 +7,7 @@ import dateparser as dp
 from baby_tracker import db
 from baby_tracker import slack
 from baby_tracker import analyze as an
+from baby_tracker.utils import format_duration, format_timestamp 
 
 HELP = """
 This is the baby tracker.
@@ -112,7 +113,7 @@ def handle_feed_request(args, db_conn):
     elif args[0] in {"ls", "list"}:
         resp = handle_list_feeds(args, db_conn)
     elif args[0] == "analyze":
-        resp = handle_feed_analyse(args, db_conn)
+        resp = handle_feed_analyze(args, db_conn)
     elif args[0] == "status":
         resp = handle_feed_status(args, db_conn)
     elif is_timestamp(args[0]):
@@ -167,7 +168,18 @@ def handle_feed_end(args, db_conn):
     resp = slack.response(mrk_down_message)
     return resp
 
-def handle_feed_analyse(args, db_conn):
+def handle_feed_analyze(args, db_conn):
+    if args[1] in {"tot", "total"}:
+        return analyze_feed_total(db_conn)
+    elif args[1] in {"avg", "average"}:
+        return analyze_feed_avg(db_conn)
+    elif args[1] in {"tl", "timeline"}:
+        return analyze_timeline(db_conn)
+    else:
+        raise ValueError("Not valid args: {args}")
+
+
+def analyze_feed_total(db_conn):
     df_agg_tot = an.total_duration_per_day(db_conn, "feed")
     plot_buffer = an.duration_plot(
         df_agg_tot, 
@@ -178,6 +190,25 @@ def handle_feed_analyse(args, db_conn):
     slack.post_file("total_breatfeeding_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
     mrk_down_message = make_duration_status_text(db_conn, "feed")
     return slack.response(mrk_down_message, response_type="in_channel")
+
+def analyze_feed_avg(db_conn):
+    df_agg_tot = an.avg_duration_per_day(db_conn, "feed")
+    plot_buffer = an.duration_plot(
+        df_agg_tot, 
+        title="Average time of breastfeeding sessions between 06:00 to 06:00",
+        scale=1/60,
+        ylabel="Duration (minutes)"
+    )
+    slack.post_file("total_breatfeeding_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    mrk_down_message = make_duration_status_text(db_conn, "feed")
+    return slack.response(mrk_down_message, response_type="in_channel")
+
+
+def analyze_timeline(db_conn):
+    df = an.merge_duration_tables(db_conn, tables=["feed", "sleep"])    
+    plot_buffer = an.timeline_plot(df, title="Timeline of breastfeeding and sleep")
+    slack.post_file("timeline.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    return slack.empty_response()
 
 
 def handle_feed_status(args, db_conn):
@@ -200,7 +231,7 @@ def handle_sleep_request(args, db_conn):
     elif args[0] in {"ls", "list"}:
         resp = handle_list_sleeps(args, db_conn)
     elif args[0] == "analyze":
-        resp = handle_sleep_analyse(args, db_conn)
+        resp = handle_sleep_analyze(args, db_conn)
     elif args[0] == "status":
         resp = handle_sleep_status(args, db_conn)
     elif is_timestamp(args[0]):
@@ -260,11 +291,35 @@ def handle_list_sleeps(args, db_conn):
     msg_text = f"*{n} latest sleeping records:*\n{table_str}"
     return slack.response(msg_text, response_type="ephemeral")
 
-def handle_sleep_analyse(args, db_conn):
+def handle_sleep_analyze(args, db_conn):
+    if args[1] in {"tot", "total"}:
+        return analyze_sleep_total(db_conn)
+    elif args[1] in {"avg", "average"}:
+        return analyze_sleep_avg(db_conn)
+    elif args[1] in {"tl", "timeline"}:
+        return analyze_timeline(db_conn)
+    else:
+        raise ValueError("Not valid args: {args}")
+
+
+def analyze_sleep_total(db_conn):
     df_agg_tot = an.total_duration_per_day(db_conn, "sleep")
     plot_buffer = an.duration_plot(
         df_agg_tot, 
         title="Total sleeping time each day from 06:00 to 06:00",
+        scale=1/3600,
+        ylabel="Duration (hours)"
+    )
+    slack.post_file("total_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    mrk_down_message = make_duration_status_text(db_conn, "sleep")
+    return slack.response(mrk_down_message, response_type="in_channel")
+
+
+def analyze_sleep_avg(db_conn):
+    df_agg_tot = an.total_duration_per_day(db_conn, "sleep")
+    plot_buffer = an.duration_plot(
+        df_agg_tot, 
+        title="Average duration of each sleep period between 06:00 to 06:00",
         scale=1/3600,
         ylabel="Duration (hours)"
     )
@@ -325,23 +380,6 @@ def format_duration_row(row: tuple):
     return id, from_time, to_time, duration, created_at
 
 
-def format_timestamp(timestamp: datetime, short=False):
-    try:
-        if short:
-            return timestamp.strftime("%H:%M")
-        else:
-            return timestamp.strftime("%d/%m-%Y %H:%M")
-    except AttributeError:
-        return str(timestamp)
-
-def format_duration(duration: timedelta):
-    try:
-        duration = duration.seconds
-        hours, remainder = divmod(duration, 3600)
-        minutes, _ = divmod(remainder, 60)
-        return f"{int(hours):02}:{int(minutes):02}"
-    except AttributeError:
-        return str(duration)
 
 
 def handle_weight_request(args, db_conn):

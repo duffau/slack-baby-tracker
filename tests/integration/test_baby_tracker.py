@@ -28,6 +28,23 @@ def test_create_list_delete_feed_record():
     assert "12:30" in resp.json()["text"]
     assert "00:05" in resp.json()["text"]
 
+    params = {"text": "analyze total"}
+    resp = requests.post(BASE_URL + "/feed", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "analyze avg"}
+    resp = requests.post(BASE_URL + "/feed", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "analyze timeline"}
+    resp = requests.post(BASE_URL + "/feed", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+
     params = {"text": "d 1"}
     resp = requests.post(BASE_URL + "/feed", data=params)
     assert resp.status_code == 200
@@ -64,11 +81,22 @@ def test_create_list_delete_analyze_sleep_record():
     assert "12:30" in resp.json()["text"]
     assert "00:05" in resp.json()["text"]
 
-    params = {"text": "analyze"}
+    params = {"text": "analyze total"}
     resp = requests.post(BASE_URL + "/sleep", data=params)
     assert resp.status_code == 200
     print(resp.json())
     assert "error" not in resp.json()["text"]
+
+    params = {"text": "analyze avg"}
+    resp = requests.post(BASE_URL + "/sleep", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "analyze timeline"}
+    resp = requests.post(BASE_URL + "/sleep", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
 
     params = {"text": "d 1"}
     resp = requests.post(BASE_URL + "/sleep", data=params)
