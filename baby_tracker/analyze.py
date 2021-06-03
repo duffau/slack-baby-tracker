@@ -1,3 +1,4 @@
+import datetime
 import io
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -7,8 +8,10 @@ import matplotlib.patches as mpatches
 from pandas.core.frame import DataFrame
 
 from baby_tracker.utils import format_duration, format_timestamp
+from baby_tracker.db import to_iso
 
 TIMESTAMP_COLUMNS = ["from_time", "to_time", "created_at", "updated_at"]
+START_OF_DAY = datetime.time.fromisoformat("06:00")
 
 def total_duration_per_day(db_conn, table, offset="6Hours"):
     df = df_from_db_table(db_conn, table)
@@ -27,12 +30,17 @@ def avg_duration_per_day(db_conn, table, offset="6Hours"):
     return agg
 
 
-def df_from_db_table(db_conn, table):
-    return pd.read_sql_query(f"SELECT * FROM {table};", db_conn, parse_dates=TIMESTAMP_COLUMNS, index_col="id")
+def df_from_db_table(db_conn, table, cutoff_timestamp:datetime=None):
+    if cutoff_timestamp is None:
+        return pd.read_sql_query(f"SELECT * FROM {table};", db_conn, parse_dates=TIMESTAMP_COLUMNS, index_col="id")
+    else:
+        return pd.read_sql_query(f"SELECT * FROM {table} WHERE created_at > {to_iso(cutoff_timestamp)};", db_conn, parse_dates=TIMESTAMP_COLUMNS, index_col="id")
 
 
-def merge_duration_tables(db_conn, tables):
-    dfs = [df_from_db_table(db_conn, table) for table in tables]
+def merge_duration_tables(db_conn, tables, n_days=3):
+    n_days_ago = datetime.date.today() - timedelta(days=n_days)
+    cutoff_timestamp = datetime.combine(n_days_ago, START_OF_DAY) 
+    dfs = [df_from_db_table(db_conn, table, cutoff_timestamp) for table in tables]
     for df, table in zip(dfs, tables):
         df["activity"] = table
     merged_df = pd.concat(dfs, ignore_index=True)
