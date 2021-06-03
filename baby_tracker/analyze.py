@@ -22,7 +22,7 @@ def total_duration_per_day(db_conn, table, offset="6Hours"):
 def latest_daily_total_duration(db_conn, table):
     df_agg_tot = total_duration_per_day(db_conn, table)
     last_date = df_agg_tot.index[-1]
-    last_duration = timedelta(seconds=df_agg_tot.duration[-1])
+    last_duration = timedelta(seconds=int(df_agg_tot.duration[-1]))
     return last_date, last_duration
 
 def avg_duration_per_day(db_conn, table, offset="6Hours"):
@@ -75,10 +75,8 @@ def timeline_plot(df: DataFrame, title=None, from_var="from_time", to_var="to_ti
         duration_sec = duration.astype('timedelta64[s]').item().total_seconds()
         ax.text(from_time+duration/2, 5, format_duration(duration_sec), rotation="vertical", va="center",ha="center")
     timestamps = numpydt_to_datetime([ft for ft, dur in  time_points])
-    print(timestamps)
     min_timestamp = min(timestamps)
     timestamps = numpydt_to_datetime([ft+dur for ft, dur in  time_points])
-    print(timestamps)
     max_timestamp = max(timestamps)
     min_timestamp = datetime.datetime.combine(min_timestamp.date(), START_OF_DAY) 
     max_timestamp = datetime.datetime.combine(max_timestamp.date() + timedelta(days=1), START_OF_DAY)

@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import logging
 from datetime import datetime, timedelta
+import baby_tracker.utils as ut  
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ def _create_duration_record(conn, duration_record, table):
     if to_time is not None:
         to_time = to_iso(to_time)
     if duration is not None:
-        duration = duration.seconds
+        duration = ut.timedelta_to_seconds(duration)
     row = (from_time, to_time, duration, current_timestamp, None)
     cur.execute(sql, row)
     conn.commit()
@@ -203,15 +204,15 @@ def _update_duration_record(conn, table, id, duration_record):
     if to_time is not None:
         to_time = to_iso(to_time)
     if duration is not None:
-        duration = duration.seconds
+        duration = ut.timedelta_to_seconds(duration)
     row = (from_time, to_time, duration, current_timestamp, id)
     cur.execute(sql, row)
     conn.commit()
     return id
 
-
 def to_iso(timestamp: datetime):
     return timestamp.strftime(ISO_FORMAT)
+
 
 def to_datetime(timestamp: str):
     if timestamp is None:
@@ -219,9 +220,6 @@ def to_datetime(timestamp: str):
     else:
         return datetime.strptime(timestamp, ISO_FORMAT)
 
-
-def timedelta_to_seconds(timedelta):
-    return timedelta.seconds
 
 def seconds_to_timedelta(seconds: int):
     if seconds is None:

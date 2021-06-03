@@ -7,7 +7,7 @@ import dateparser as dp
 from baby_tracker import db
 from baby_tracker import slack
 from baby_tracker import analyze as an
-from baby_tracker.utils import format_duration, format_timestamp 
+from baby_tracker.utils import format_duration, format_timestamp, timedelta_to_seconds 
 
 HELP = """
 This is the baby tracker.
@@ -261,6 +261,7 @@ def handle_sleep_end(args, db_conn):
     sleep_id, from_time, to_time, *ignore = db.get_latest_sleep_record_with_null_to_time(db_conn)
     to_time = dp.parse(args[1])
     duration = to_time - from_time
+    _validate_duration(duration)
     updated_sleep_record = (from_time, to_time, duration)
     db.update_sleep(db_conn, sleep_id, updated_sleep_record)
     mrk_down_message = f":sleeping: Sleep record with Id: *{sleep_id}* updated. Stopped at {format_timestamp(to_time, short=True)}."
@@ -356,7 +357,7 @@ def make_duration_status_text(db_conn, table, latest_id=None):
 def _validate_duration(duration):
     if duration is not None:
         assert (
-            duration.seconds > 0
+            timedelta_to_seconds(duration) > 0
         ), "Duration must be positive. Got from_time '{from_time}' and to_time: '{to_time}' which gives a duration of '{duration}' seconds."
 
 
