@@ -10,6 +10,7 @@ def format_timestamp(timestamp: datetime, short=False):
     except AttributeError:
         return str(timestamp)
 
+
 def format_duration(duration: timedelta):
     try:
         duration = duration.seconds
@@ -21,3 +22,9 @@ def format_duration(duration: timedelta):
         return f"{int(hours):02}:{int(minutes):02}"
     except Exception:
         return str(duration)
+
+
+def datetime_range(start=None, end=None):
+    span = end - start
+    for i in range(span.days + 1):
+        yield start + timedelta(days=i)
