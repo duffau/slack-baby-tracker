@@ -48,11 +48,21 @@ SQL_CREATE_SLEEP_TABLE = """ CREATE TABLE IF NOT EXISTS sleep (
                                     updated_at text
                                 ); """
 
+SQL_CREATE_WEIGHT_TABLE = """ CREATE TABLE IF NOT EXISTS weight (
+                                    id integer PRIMARY KEY,
+                                    timestamp text,
+                                    weight int,
+                                    duration int,
+                                    created_at text,
+                                    updated_at text
+                                ); """
+
 
 def init_db(db_file: str):
     conn = create_connection(db_file)
     create_table(conn, SQL_CREATE_FEED_TABLE)
     create_table(conn, SQL_CREATE_SLEEP_TABLE)
+    create_table(conn, SQL_CREATE_WEIGHT_TABLE)
     return conn
 
 

@@ -17,6 +17,14 @@ duration int,
 created_at text,
 updated_at text);'
 
+SQL_CREATE_WEIGHT_TABLE = 'CREATE TABLE IF NOT EXISTS weight (
+id integer PRIMARY KEY,
+timestamp text,
+weight int,
+duration int,
+created_at text,
+updated_at text);'
+
 .venv/bin/python3 ./data/transform_csv.py ./data/feed_slack_records.csv ./data/_feed_slack_records.csv
 .venv/bin/python3 ./data/transform_csv.py ./data/sleep_slack_records.csv ./data/_sleep_slack_records.csv
 .venv/bin/python3 ./data/filter_rows.py ./data/feed.csv 75 > ./data/_feed.csv
@@ -32,9 +40,11 @@ tail -n +2 ./data/_sleep.csv > ./data/__sleep.csv
 sqlite3 db.sqlite <<EOF
 ${SQL_CREATE_FEED_TABLE}
 ${SQL_CREATE_SLEEP_TABLE}
+${SQL_CREATE_WEIGHT_TABLE}
 .mode csv
 .import ./data/__feed.csv feed
 .import ./data/__sleep.csv sleep
+.import ./data/weight.csv weight
 UPDATE feed SET from_time = NULL WHERE from_time = 'NULL';
 UPDATE feed SET to_time = NULL WHERE to_time = 'NULL';
 UPDATE feed SET duration = NULL WHERE duration = 'NULL';
