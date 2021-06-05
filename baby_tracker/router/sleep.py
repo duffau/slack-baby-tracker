@@ -97,6 +97,8 @@ def handle_sleep_analyze(args, db_conn):
         return analyze_sleep_total(db_conn)
     elif args[1] in {"avg", "average"}:
         return analyze_sleep_avg(db_conn)
+    elif args[1] in {"cnt", "count"}:
+        return analyze_sleep_count(db_conn)
     elif args[1] in {"tl", "timeline"}:
         return analyze_timeline(db_conn)
     else:
@@ -117,14 +119,26 @@ def analyze_sleep_total(db_conn):
 
 
 def analyze_sleep_avg(db_conn):
-    df_agg_tot = an.total_duration_per_day(db_conn, "sleep")
+    df_agg_tot = an.avg_duration_per_day(db_conn, "sleep")
     plot_buffer = an.duration_plot(
         df_agg_tot, 
         title="Average duration of each sleep period between 06:00 to 06:00",
         scale=1/3600,
         ylabel="Duration (hours)"
     )
-    slack.post_file("total_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    slack.post_file("avg_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    mrk_down_message = make_duration_status_text(db_conn, "sleep")
+    return slack.response(mrk_down_message, response_type="in_channel")
+
+def analyze_sleep_count(db_conn):
+    df_agg_tot = an.count_per_day(db_conn, "sleep")
+    plot_buffer = an.duration_plot(
+        df_agg_tot, 
+        title="Number of sleep periods between 06:00 to 06:00",
+        scale=1,
+        ylabel="Count"
+    )
+    slack.post_file("count_sleeping_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
     mrk_down_message = make_duration_status_text(db_conn, "sleep")
     return slack.response(mrk_down_message, response_type="in_channel")
 

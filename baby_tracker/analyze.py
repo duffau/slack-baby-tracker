@@ -31,6 +31,11 @@ def avg_duration_per_day(db_conn, table, offset="6Hours"):
     agg = df.resample('D', on='from_time', offset=offset)[["duration"]].mean()
     return agg
 
+def count_per_day(db_conn, table, offset="6Hours"):
+    df = df_from_db_table(db_conn, table)
+    agg = df.resample('D', on='from_time', offset=offset)[["duration"]].size()
+    return agg
+
 
 def df_from_db_table(db_conn, table, cutoff_timestamp:datetime=None):
     if cutoff_timestamp is None:
@@ -50,7 +55,8 @@ def merge_duration_tables(db_conn, tables, n_days=3):
 
 
 def duration_plot(df, title=None, scale=1/60, kind="bar", ylabel="Duration (minutes)"):
-    df.duration *= scale
+    if scale != 1:
+        df.duration *= scale
     fig, ax = plt.subplots()
     df.plot(title=title, kind=kind, ax=ax)
     ax.set_ylabel(ylabel)

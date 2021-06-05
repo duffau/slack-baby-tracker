@@ -92,6 +92,8 @@ def handle_feed_analyze(args, db_conn):
         return analyze_feed_total(db_conn)
     elif args[1] in {"avg", "average"}:
         return analyze_feed_avg(db_conn)
+    elif args[1] in {"cnt", "count"}:
+        return analyze_feed_count(db_conn)
     elif args[1] in {"tl", "timeline"}:
         return analyze_timeline(db_conn)
     else:
@@ -119,6 +121,19 @@ def analyze_feed_avg(db_conn):
         ylabel="Duration (minutes)"
     )
     slack.post_file("total_breatfeeding_time.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
+    mrk_down_message = make_duration_status_text(db_conn, "feed")
+    return slack.response(mrk_down_message, response_type="in_channel")
+
+
+def analyze_feed_count(db_conn):
+    df_agg_tot = an.count_per_day(db_conn, "feed")
+    plot_buffer = an.duration_plot(
+        df_agg_tot, 
+        title="Number of breastfeeding sessions between 06:00 to 06:00",
+        scale=1,
+        ylabel="Count"
+    )
+    slack.post_file("count_breastfeed.png", plot_buffer, oauth_token=SLACK_OAUTH_TOKEN, channel_id=CHANNEL_ID)
     mrk_down_message = make_duration_status_text(db_conn, "feed")
     return slack.response(mrk_down_message, response_type="in_channel")
 
