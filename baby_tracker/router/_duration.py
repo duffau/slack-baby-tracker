@@ -49,9 +49,7 @@ def format_duration_row(row: tuple):
     from_time = format_timestamp(from_time, short=True)
     to_time = format_timestamp(to_time, short=True)
     duration = format_duration(duration)
-    created_at = format_timestamp(created_at)
-    updated_at = format_timestamp(updated_at)
-    return id, from_time, to_time, duration, created_at
+    return from_time, to_time, duration
 
 
 def analyze_timeline(db_conn):

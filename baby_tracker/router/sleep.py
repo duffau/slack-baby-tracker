@@ -87,7 +87,7 @@ def handle_list_sleeps(args, db_conn):
     n = args[1] if len(args) == 2 else DEFAULT_N_LIST
     rows = db.get_latest_sleep_records(db_conn, n)
     rows = [format_duration_row(row) for row in rows]
-    colnames = ["id", "from", "to", "duration", "created_at"]
+    colnames = ["from", "to", "duration"]
     table_str = slack.table(rows, colnames)
     msg_text = f"*{n} latest sleeping records:*\n{table_str}"
     return slack.response(msg_text, response_type="ephemeral")
