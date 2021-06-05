@@ -17,11 +17,10 @@ duration int,
 created_at text,
 updated_at text);'
 
-SQL_CREATE_WEIGHT_TABLE = 'CREATE TABLE IF NOT EXISTS weight (
+SQL_CREATE_WEIGHT_TABLE='CREATE TABLE IF NOT EXISTS weight (
 id integer PRIMARY KEY,
-timestamp text,
-weight int,
-duration int,
+timestamp text NOT NULL,
+weight int NOT NULL,
 created_at text,
 updated_at text);'
 
@@ -35,6 +34,7 @@ updated_at text);'
 # Removed header from CSV's
 tail -n +2 ./data/_feed.csv > ./data/__feed.csv
 tail -n +2 ./data/_sleep.csv > ./data/__sleep.csv
+tail -n +2 ./data/weight.csv > ./data/__weight.csv
 
 
 sqlite3 db.sqlite <<EOF
@@ -44,7 +44,7 @@ ${SQL_CREATE_WEIGHT_TABLE}
 .mode csv
 .import ./data/__feed.csv feed
 .import ./data/__sleep.csv sleep
-.import ./data/weight.csv weight
+.import ./data/__weight.csv weight
 UPDATE feed SET from_time = NULL WHERE from_time = 'NULL';
 UPDATE feed SET to_time = NULL WHERE to_time = 'NULL';
 UPDATE feed SET duration = NULL WHERE duration = 'NULL';

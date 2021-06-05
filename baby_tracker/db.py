@@ -50,9 +50,8 @@ SQL_CREATE_SLEEP_TABLE = """ CREATE TABLE IF NOT EXISTS sleep (
 
 SQL_CREATE_WEIGHT_TABLE = """ CREATE TABLE IF NOT EXISTS weight (
                                     id integer PRIMARY KEY,
-                                    timestamp text,
-                                    weight int,
-                                    duration int,
+                                    timestamp text NOT NULL,
+                                    weight int NOT NULL,
                                     created_at text,
                                     updated_at text
                                 ); """
@@ -98,6 +97,16 @@ def _create_duration_record(conn, duration_record, table):
     conn.commit()
     return cur.lastrowid
 
+def create_weight(conn, weight_rec):
+    sql = f"""INSERT INTO weight(timestamp,weight,created_at,updated_at)
+              VALUES(?,?,?,?) """
+    cur = conn.cursor()
+    current_timestamp = to_iso(datetime.now())
+    timestamp, weight = weight_rec
+    row = (timestamp, weight, current_timestamp, None)
+    cur.execute(sql, row)
+    conn.commit()
+    return cur.lastrowid
 
 def get_latest_feed_records(conn, n=5):
     return _get_latest_duration_records(conn, "feed", n)
@@ -115,6 +124,18 @@ def _get_latest_duration_records(conn, table, n):
     transformed_rows = []
     for row in rows:
         transformed_row = transform_duration_row(row)
+        transformed_rows.append(transformed_row)
+    return transformed_rows
+
+def get_latest_weight_records(conn, n=None):
+    cur = conn.cursor()
+    limit = f"LIMIT {n}" if n is not None else ""
+    sql = f"SELECT * FROM weight ORDER BY timestamp desc " + limit
+    cur.execute(sql)
+    rows = cur.fetchall()
+    transformed_rows = []
+    for row in rows:
+        transformed_row = transform_weight_row(row)
         transformed_rows.append(transformed_row)
     return transformed_rows
 
@@ -168,6 +189,14 @@ def transform_duration_row(row):
     transformed_row = id, from_time, to_time, duration, created_at, updated_at
     return transformed_row
 
+def transform_weight_row(row):
+    id, timestamp, weight, created_at, updated_at = row
+    timestamp = to_datetime(timestamp)
+    created_at = to_datetime(created_at)
+    updated_at = to_datetime(updated_at)
+    transformed_row = id, timestamp, weight, created_at, updated_at
+    return transformed_row
+
 def delete_feed(conn, feed_id):
     return _delete_duration_record(conn, feed_id, "feed")
 
@@ -185,6 +214,14 @@ def _delete_duration_record(conn, record_id, table):
     :return: id
     """
     sql = f"""DELETE from {table} where id = {record_id}"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    conn.commit()
+    return record_id
+
+
+def delete_weight_record(conn, record_id):
+    sql = f"""DELETE from weight where id = {record_id}"""
     cur = conn.cursor()
     cur.execute(sql)
     conn.commit()

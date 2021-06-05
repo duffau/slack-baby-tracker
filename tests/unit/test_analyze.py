@@ -47,3 +47,11 @@ plot_buffer = an.timeline_plot(df)
 
 with open("timeline.png", "wb") as plot_file:
     plot_file.write(plot_buffer.read())
+
+df = an.weight_growth_df(db_conn)
+print(df.dtypes)
+print(df)
+plot_buffer = an.growth_curves_plot(df)
+
+with open("weight_growth.png", "wb") as plot_file:
+    plot_file.write(plot_buffer.read())

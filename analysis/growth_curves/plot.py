@@ -37,7 +37,6 @@ plt.close()
 for sex in 1, 2:
 
     df = weight_to_age[weight_to_age.sex == sex].copy()
-
     S, M, L = np.array(df.s), np.array(df.m), np.array(df.l)
 
     def confidence(age, alpha, s=S, m=M, l=L):
@@ -45,11 +44,11 @@ for sex in 1, 2:
         # age = int(age)
         return M[age] * (1 + L[age] * S[age] * z) ** (1 / L[age])
 
-    df["p5"] = confidence(df.age, alpha=0.05)
-    df["p25"] = confidence(df.age, alpha=0.25)
-    df["p50"] = confidence(df.age, alpha=0.5)
-    df["p75"] = confidence(df.age, alpha=0.75)
-    df["p95"] = confidence(df.age, alpha=0.95)
+    df["p5"] = confidence(df.age, alpha=0.05)*1000
+    df["p25"] = confidence(df.age, alpha=0.25)*1000
+    df["p50"] = confidence(df.age, alpha=0.5)*1000
+    df["p75"] = confidence(df.age, alpha=0.75)*1000
+    df["p95"] = confidence(df.age, alpha=0.95)*1000
 
     sex_name = ["boy", "girl"][sex - 1]
     df.to_csv(f"../../data/growth-curves/weianthro_{sex_name}.csv")
@@ -61,7 +60,7 @@ for sex in 1, 2:
         lw=1,
         color="black",
         title=f"WHO weight to age curves: {sex_name}",
-        ylabel="weight (kg)",
+        ylabel="weight (g)",
         xlabel="age (days)",
     )
     ax.get_legend().remove()

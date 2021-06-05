@@ -6,12 +6,13 @@ from datetime import timedelta
 import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 from pandas.core.frame import DataFrame
+from labellines import labelLines
 
 from baby_tracker.utils import format_duration, format_timestamp
 from baby_tracker.db import to_iso
 import baby_tracker.utils as ut
 
-TIMESTAMP_COLUMNS = ["from_time", "to_time", "created_at", "updated_at"]
+TIMESTAMP_COLUMNS = ["from_time", "to_time", "created_at", "updated_at", "timestamp"]
 START_OF_DAY = datetime.time.fromisoformat("06:00")
 
 def total_duration_per_day(db_conn, table, offset="6Hours"):
@@ -87,6 +88,44 @@ def timeline_plot(df: DataFrame, title=None, from_var="from_time", to_var="to_ti
     legend_handles = [ mpatches.Patch(color=colors[i], label=activity) for i, activity in enumerate(unique_activities)]
     plt.legend(handles=legend_handles)
     plt.tight_layout()
+    return plot_to_buffer(fig)
+
+
+def weight_growth_df(db_conn, birth_date=datetime.date(2021, 5, 18)):
+    df = df_from_db_table(db_conn, "weight")
+    df["age"] = (df.timestamp - pd.to_datetime(birth_date)).dt.days
+    return df
+
+
+def growth_curves_plot(df,  title=None, growth_variable="weight", sex="girl", baby_name="Carla"):
+    basename = {"weight": "weianthro"}.get(growth_variable)
+    x_var = "age"
+    ylabel = {"weight": "weight (g)"}.get(growth_variable)
+    xlabel = {"weight": "age (days)"}.get(growth_variable)
+
+
+    growth_curnves = pd.read_csv(f"./data/growth-curves/{basename}_{sex}.csv")
+    x_max = int(max(df[x_var])*1.25)
+    growth_curnves = growth_curnves[growth_curnves[x_var] < x_max].copy()
+
+    fig, ax = plt.subplots()
+    ax = growth_curnves.plot(
+        x=x_var,
+        y=["p5", "p25", "p50", "p75", "p95"],
+        style=["--", "--", "-", "--", "--"],
+        lw=1,
+        color="black",
+        title=f"WHO {growth_variable} curves: {sex}",
+        ax = ax
+    )
+    labelLines(fig.gca().get_lines(), zorder=2.5)
+    ax = df.plot(x=x_var, y=growth_variable, label=baby_name, ax=ax, style="-o")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.get_legend().remove()
+    # ax.set_xlim(x_min, x_max)
+    # ax.set_ylim(y_min, y_max)
+    fig.tight_layout()
     return plot_to_buffer(fig)
 
 def numpydt_to_datetime(np_datetime):
