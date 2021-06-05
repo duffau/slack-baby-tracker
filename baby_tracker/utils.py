@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import dateparser as dp
 
 def timedelta_to_seconds(timedelta):
     return timedelta.total_seconds()
@@ -35,3 +36,8 @@ def datetime_range(start=None, end=None):
     span = end - start
     for i in range(span.days + 1):
         yield start + timedelta(days=i)
+
+
+def is_timestamp(s):
+    out = dp.parse(s)
+    return out is not None
