@@ -7,6 +7,8 @@ from baby_tracker import slack
 from baby_tracker.router.feed import handle_feed_request
 from baby_tracker.router.sleep import handle_sleep_request
 from baby_tracker.router.weight import handle_weight_request
+from baby_tracker.router.poop import handle_poop_request
+
 
 HELP = """
 This is the baby tracker.
@@ -68,6 +70,8 @@ def _handle_action(action, args, db_conn):
         resp = handle_sleep_request(args, db_conn)
     elif action == "weight":
         resp = handle_weight_request(args, db_conn)
+    elif action == "poop":
+        resp = handle_poop_request(args, db_conn)
     else:
         raise ValueError(f"action: '{action}' not recognized.")
     return resp

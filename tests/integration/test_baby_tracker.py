@@ -127,6 +127,24 @@ def test_create_list_delete_analyze_weight_record():
     print(resp.json())
     assert "error" not in resp.json()["text"]
 
+    params = {"text": "2021-05-22 3300"}
+    resp = requests.post(BASE_URL + "/weight", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "2021-05-25 3400"}
+    resp = requests.post(BASE_URL + "/weight", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "ls"}
+    resp = requests.post(BASE_URL + "/weight", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
     params = {"text": "analyze"}
     resp = requests.post(BASE_URL + "/weight", data=params)
     assert resp.status_code == 200
@@ -135,6 +153,26 @@ def test_create_list_delete_analyze_weight_record():
 
     params = {"text": "d 1"}
     resp = requests.post(BASE_URL + "/weight", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+
+def test_create_list_delete_analyze_poop_record():
+    params = {"text": "2021-05-18"}
+    resp = requests.post(BASE_URL + "/poop", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "ls"}
+    resp = requests.post(BASE_URL + "/poop", data=params)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert "error" not in resp.json()["text"]
+
+    params = {"text": "d 1"}
+    resp = requests.post(BASE_URL + "/poop", data=params)
     assert resp.status_code == 200
     print(resp.json())
     assert "error" not in resp.json()["text"]

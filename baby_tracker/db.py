@@ -56,12 +56,20 @@ SQL_CREATE_WEIGHT_TABLE = """ CREATE TABLE IF NOT EXISTS weight (
                                     updated_at text
                                 ); """
 
+SQL_CREATE_POOP_TABLE = """ CREATE TABLE IF NOT EXISTS poop (
+                                    id integer PRIMARY KEY,
+                                    timestamp text NOT NULL,
+                                    created_at text,
+                                    updated_at text
+                                ); """
+
 
 def init_db(db_file: str):
     conn = create_connection(db_file)
     create_table(conn, SQL_CREATE_FEED_TABLE)
     create_table(conn, SQL_CREATE_SLEEP_TABLE)
     create_table(conn, SQL_CREATE_WEIGHT_TABLE)
+    create_table(conn, SQL_CREATE_POOP_TABLE)
     return conn
 
 
@@ -103,10 +111,27 @@ def create_weight(conn, weight_rec):
     cur = conn.cursor()
     current_timestamp = to_iso(datetime.now())
     timestamp, weight = weight_rec
+    if timestamp is not None:
+        timestamp = to_iso(timestamp)
     row = (timestamp, weight, current_timestamp, None)
     cur.execute(sql, row)
     conn.commit()
     return cur.lastrowid
+
+
+def create_poop(conn, poop_rec):
+    sql = f"""INSERT INTO poop(timestamp,created_at,updated_at)
+              VALUES(?,?,?) """
+    cur = conn.cursor()
+    current_timestamp = to_iso(datetime.now())
+    timestamp = poop_rec
+    if timestamp is not None:
+        timestamp = to_iso(timestamp)
+    row = (timestamp, current_timestamp, None)
+    cur.execute(sql, row)
+    conn.commit()
+    return cur.lastrowid
+
 
 def get_latest_feed_records(conn, n=5):
     return _get_latest_duration_records(conn, "feed", n)
@@ -136,6 +161,19 @@ def get_latest_weight_records(conn, n=None):
     transformed_rows = []
     for row in rows:
         transformed_row = transform_weight_row(row)
+        transformed_rows.append(transformed_row)
+    return transformed_rows
+
+
+def get_latest_poop_records(conn, n=None):
+    cur = conn.cursor()
+    limit = f"LIMIT {n}" if n is not None else ""
+    sql = f"SELECT * FROM poop ORDER BY timestamp desc " + limit
+    cur.execute(sql)
+    rows = cur.fetchall()
+    transformed_rows = []
+    for row in rows:
+        transformed_row = transform_poop_row(row)
         transformed_rows.append(transformed_row)
     return transformed_rows
 
@@ -189,6 +227,7 @@ def transform_duration_row(row):
     transformed_row = id, from_time, to_time, duration, created_at, updated_at
     return transformed_row
 
+
 def transform_weight_row(row):
     id, timestamp, weight, created_at, updated_at = row
     timestamp = to_datetime(timestamp)
@@ -196,6 +235,15 @@ def transform_weight_row(row):
     updated_at = to_datetime(updated_at)
     transformed_row = id, timestamp, weight, created_at, updated_at
     return transformed_row
+
+def transform_poop_row(row):
+    id, timestamp, created_at, updated_at = row
+    timestamp = to_datetime(timestamp)
+    created_at = to_datetime(created_at)
+    updated_at = to_datetime(updated_at)
+    transformed_row = id, timestamp, created_at, updated_at
+    return transformed_row
+
 
 def delete_feed(conn, feed_id):
     return _delete_duration_record(conn, feed_id, "feed")
@@ -222,6 +270,14 @@ def _delete_duration_record(conn, record_id, table):
 
 def delete_weight_record(conn, record_id):
     sql = f"""DELETE from weight where id = {record_id}"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    conn.commit()
+    return record_id
+
+
+def delete_poop_record(conn, record_id):
+    sql = f"""DELETE from poop where id = {record_id}"""
     cur = conn.cursor()
     cur.execute(sql)
     conn.commit()
