@@ -84,7 +84,7 @@ def handle_delete_sleep(args, db_conn):
 
 
 def handle_list_sleeps(args, db_conn):
-    n = args[1] if len(args) == 2 else DEFAULT_N_LIST
+    n = int(args[1]) if len(args) == 2 else DEFAULT_N_LIST
     rows = db.get_latest_sleep_records(db_conn, n)
     rows = [format_duration_row(row) for row in rows]
     colnames = ["from", "to", "duration"]

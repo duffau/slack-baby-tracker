@@ -52,7 +52,7 @@ def handle_delete_feed(args, db_conn):
 
 
 def handle_list_feeds(args, db_conn):
-    n = args[1] if len(args) == 2 else DEFAULT_N_LIST
+    n = int(args[1]) if len(args) == 2 else DEFAULT_N_LIST
     feed_rows = db.get_latest_feed_records(db_conn, n//2)
     sleep_rows = db.get_latest_sleep_records(db_conn, n//2)
     feed_rows = [(*row, "feed") for row in  feed_rows]
