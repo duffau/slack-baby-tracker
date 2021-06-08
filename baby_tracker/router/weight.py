@@ -3,9 +3,9 @@ import dateparser as dp
 from baby_tracker import db
 from baby_tracker import slack
 from baby_tracker import analyze as an
-from baby_tracker.utils import is_timestamp
+from baby_tracker.utils import is_timestamp, format_timestamp
 
-from .config import SLACK_OAUTH_TOKEN, CHANNEL_ID
+from .config import SLACK_OAUTH_TOKEN, CHANNEL_ID, DEFAULT_N_LIST
 
 WEIGHT_HELP = """
 *Examples*:
@@ -21,6 +21,8 @@ def handle_weight_request(args, db_conn):
         resp = slack.response(WEIGHT_HELP, response_type="ephemeral")
     elif args[0] in {"d", "del", "delete"}:
         resp = handle_delete_weight(args, db_conn)
+    elif args[0] in {"ls", "list"}:
+        resp = handle_list_weight(args, db_conn)
     elif args[0] == "analyze":
         resp = handle_weight_analyze(args, db_conn)
     elif is_timestamp(args[0]):
@@ -56,6 +58,16 @@ def handle_delete_weight(args, db_conn):
     return resp
 
 
+def handle_list_weight(args, db_conn):
+    n = int(args[1]) if len(args) == 2 else DEFAULT_N_LIST
+    rows = db.get_latest_weight_records(db_conn, n)
+    rows = [format_weight_row(row) for row in rows]
+    colnames = ["date", "weight"]
+    table_str = slack.table(rows, colnames)
+    msg_text = f"*{n} latest weight records:*\n{table_str}"
+    return slack.response(msg_text, response_type="ephemeral")
+
+
 def handle_weight_analyze(args, db_conn):
     df = an.weight_growth_df(db_conn)
     plot_buffer = an.growth_curves_plot(df)
@@ -63,3 +75,9 @@ def handle_weight_analyze(args, db_conn):
     mrk_down_message = f"Latest weight measure at {df.iloc[-1]['weight']} g"
     return slack.response(mrk_down_message, response_type="in_channel")
 
+
+def format_weight_row(row):
+    _id, timestamp, weight, created_at, updated_at = row
+    timestamp = format_timestamp(timestamp)
+    weight = f"{weight}g"
+    return timestamp, weight
