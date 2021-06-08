@@ -52,6 +52,14 @@ def format_duration_row(row: tuple):
     return from_time, to_time, duration
 
 
+def format_merged_duration_row(row: tuple):
+    id, from_time, to_time, duration, created_at, updated_at, activity = row
+    from_time = format_timestamp(from_time, short=True)
+    to_time = format_timestamp(to_time, short=True)
+    duration = format_duration(duration)
+    return from_time, to_time, duration, activity
+
+
 def analyze_timeline(db_conn):
     df = an.merge_duration_tables(db_conn, tables=["feed", "sleep"])    
     plot_buffer = an.timeline_plot(df, title="Timeline of breastfeeding and sleep")

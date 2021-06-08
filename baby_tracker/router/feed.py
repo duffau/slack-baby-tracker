@@ -4,7 +4,7 @@ from baby_tracker import db
 from baby_tracker import slack
 from baby_tracker import analyze as an
 from baby_tracker.utils import format_timestamp, is_timestamp
-from baby_tracker.router._duration import create_duration_record, make_duration_status_text, format_duration_row, format_timestamp, _validate_duration, analyze_timeline
+from baby_tracker.router._duration import create_duration_record, make_duration_status_text, format_merged_duration_row, format_timestamp, _validate_duration, analyze_timeline
 
 from .config import DEFAULT_N_LIST, SLACK_OAUTH_TOKEN, CHANNEL_ID
 
@@ -53,11 +53,15 @@ def handle_delete_feed(args, db_conn):
 
 def handle_list_feeds(args, db_conn):
     n = args[1] if len(args) == 2 else DEFAULT_N_LIST
-    rows = db.get_latest_feed_records(db_conn, n)
-    rows = [format_duration_row(row) for row in rows]
-    colnames = ["from", "to", "duration"]
+    feed_rows = db.get_latest_feed_records(db_conn, n//2)
+    sleep_rows = db.get_latest_sleep_records(db_conn, n//2)
+    feed_rows = [(*row, "feed") for row in  feed_rows]
+    sleep_rows = [(*row, "sleep") for row in  sleep_rows]
+    rows = sorted(feed_rows+sleep_rows, key=lambda row: row[1])
+    rows = [format_merged_duration_row(row) for row in rows]
+    colnames = ["from", "to", "duration", "activity"]
     table_str = slack.table(rows, colnames)
-    msg_text = f"*{n} latest breastfeeding records:*\n{table_str}"
+    msg_text = f"*{n} latest breastfeeding and sleep records:*\n{table_str}"
     return slack.response(msg_text, response_type="ephemeral")
 
 
