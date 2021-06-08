@@ -48,7 +48,7 @@ def create_weight_record(args, db_conn):
 
 def handle_delete_weight(args, db_conn):
     weight_id = args[1]
-    db.delete_feed(db_conn, weight_id)
+    db.delete_weight_record(db_conn, weight_id)
     mrk_down_message = (
         f"Weight record with Id: *{weight_id}* deleted :wastebasket:"
     )
