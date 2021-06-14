@@ -9,10 +9,12 @@ def to_iso(timestamp: datetime):
     return timestamp.strftime(ISO_FORMAT)
 
 
-def format_timestamp(timestamp: datetime, short=False):
+def format_timestamp(timestamp: datetime, short=False, date_only=False):
     try:
         if short:
             return timestamp.strftime("%H:%M")
+        elif date_only:
+            return timestamp.strftime("%a %d/%m")
         else:
             return timestamp.strftime("%d/%m-%Y %H:%M")
     except AttributeError:
@@ -25,9 +27,13 @@ def format_duration(duration: timedelta):
     except AttributeError:
         pass
     try:
-        hours, remainder = divmod(duration, 3600)
+        duration_str = ""
+        days, remainder = divmod(duration, 86400)
+        hours, remainder = divmod(remainder, 3600)
         minutes, _ = divmod(remainder, 60)
-        return f"{int(hours):02}:{int(minutes):02}"
+        duration_str += f"{int(days)} days " if days > 0 else ""
+        duration_str += f"{int(hours):02}:{int(minutes):02}"
+        return duration_str
     except Exception:
         return str(duration)
 
