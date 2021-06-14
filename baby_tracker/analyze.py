@@ -2,7 +2,7 @@ import datetime
 import io
 import pandas as pd
 from matplotlib import pyplot as plt
-from datetime import timedelta
+from datetime import timedelta, date
 import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 from pandas.core.frame import DataFrame
@@ -45,13 +45,20 @@ def df_from_db_table(db_conn, table, cutoff_timestamp:datetime=None):
 
 
 def merge_duration_tables(db_conn, tables, n_days=3):
-    n_days_ago = datetime.date.today() - timedelta(days=n_days-1)
-    cutoff_timestamp = datetime.datetime.combine(n_days_ago, START_OF_DAY) 
-    dfs = [df_from_db_table(db_conn, table, cutoff_timestamp) for table in tables]
+    dfs = [get_duration_table(db_conn, table, n_days=n_days) for table in tables]
     for df, table in zip(dfs, tables):
         df["activity"] = table
     merged_df = pd.concat(dfs, ignore_index=True)
     return merged_df
+
+
+def get_duration_table(db_conn, table, n_days=3, n_weeks=None):
+    if n_weeks:
+        cutoff_date = date.today() - timedelta(days=date.today().weekday(), weeks=n_weeks)
+    else:
+        cutoff_date = datetime.date.today() - timedelta(days=n_days-1)
+    cutoff_timestamp = datetime.datetime.combine(cutoff_date, START_OF_DAY) 
+    return df_from_db_table(db_conn, table, cutoff_timestamp)
 
 
 def duration_plot(df, title=None, scale=1/60, kind="bar", ylabel="Duration (minutes)"):
@@ -61,6 +68,8 @@ def duration_plot(df, title=None, scale=1/60, kind="bar", ylabel="Duration (minu
     df.plot(title=title, kind=kind, ax=ax)
     ax.set_ylabel(ylabel)
     ax.set_xticklabels([x.strftime("%a %d/%m") for x in df.index], rotation=90)
+    ax.set_axisbelow(True)
+    ax.grid(axis="y")
     plt.tight_layout()
     return plot_to_buffer(fig)
 
@@ -96,6 +105,9 @@ def timeline_plot(df: DataFrame, title=None, from_var="from_time", to_var="to_ti
     plt.tight_layout()
     return plot_to_buffer(fig)
 
+def daily_duration_pattern_plot(df: DataFrame, title=None, from_var="from_time", to_var="to_time", duration_var="duration"):
+    pass
+
 
 def weight_growth_df(db_conn, birth_date=datetime.date(2021, 5, 18)):
     df = df_from_db_table(db_conn, "weight")
@@ -129,8 +141,8 @@ def growth_curves_plot(df,  title=None, growth_variable="weight", sex="girl", ba
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.get_legend().remove()
-    # ax.set_xlim(x_min, x_max)
-    # ax.set_ylim(y_min, y_max)
+    ax.set_axisbelow(True)
+    ax.grid(axis="y")
     fig.tight_layout()
     return plot_to_buffer(fig)
 
