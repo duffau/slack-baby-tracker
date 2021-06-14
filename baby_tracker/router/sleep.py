@@ -1,9 +1,10 @@
 import dateparser as dp
+from datetime import timedelta
 
 from baby_tracker import db
 from baby_tracker import slack
 from baby_tracker import analyze as an
-from baby_tracker.utils import format_timestamp, is_timestamp
+from baby_tracker.utils import format_timestamp, format_duration, is_timestamp, timedelta_to_seconds
 from baby_tracker.router._duration import create_duration_record, make_duration_status_text, format_duration_row, format_timestamp, _validate_duration, analyze_timeline
 
 from .config import DEFAULT_N_LIST, SLACK_OAUTH_TOKEN, CHANNEL_ID
@@ -17,6 +18,13 @@ SLEEP_HELP = """
 `/sl s 14:45` Sleep started at 14:45.
 `/sl analyze` Returns plots and stats of sleeping bahaviour.
 """
+
+MAX_VALID_SLEEP_SEC = timedelta(hours=10)
+
+def validate_sleep_duration(duration):
+    _validate_duration(duration)
+    if duration is not None:
+        assert duration < MAX_VALID_SLEEP_SEC, f"Sleep duration must be less than {format_duration(MAX_VALID_SLEEP_SEC)}"
 
 
 def handle_sleep_request(args, db_conn):
@@ -61,7 +69,7 @@ def handle_sleep_end(args, db_conn):
     sleep_id, from_time, to_time, *ignore = db.get_latest_sleep_record_with_null_to_time(db_conn)
     to_time = dp.parse(args[1])
     duration = to_time - from_time
-    _validate_duration(duration)
+    validate_sleep_duration(duration)    
     updated_sleep_record = (from_time, to_time, duration)
     db.update_sleep(db_conn, sleep_id, updated_sleep_record)
     mrk_down_message = f":sleeping: Sleep record with Id: *{sleep_id}* updated. Stopped at {format_timestamp(to_time, short=True)}."
@@ -71,7 +79,7 @@ def handle_sleep_end(args, db_conn):
 
 
 def create_sleep_record(args, db_conn):
-    return create_duration_record(args, db.create_sleep, db_conn)
+    return create_duration_record(args, db.create_sleep, db_conn, validate_duration=validate_sleep_duration)
 
 def handle_delete_sleep(args, db_conn):
     sleep_id = args[1]
